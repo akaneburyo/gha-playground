@@ -6,7 +6,6 @@ on:
       VARIABLE:
         description: "VARIABLE"
         required: false
-        default: "default value"
 
 jobs:
   notify:
