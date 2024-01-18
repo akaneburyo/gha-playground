@@ -1,9 +1,10 @@
-name: Notify on new release
+name: Get PR Number
 
 on:
   push:
     branches:
-      - preview/*
+      - preview/**
+  workflow_dispatch:
 
 jobs:
   get-pr-number:
