@@ -13,7 +13,7 @@ jobs:
       - name: Notify
         uses: rtCamp/action-slack-notify@master
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CHANNEL: notify
           SLACK_COLOR: good
           SLACK_TITLE: New Release on ${{ github.repository }}
