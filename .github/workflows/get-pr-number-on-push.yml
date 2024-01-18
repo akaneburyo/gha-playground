@@ -34,4 +34,4 @@ jobs:
           SLACK_COLOR: good
           SLACK_TITLE: Get PR Number
           # リポジトリのurlを取得し、結合してreleaseへのリンクを作成する
-          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ fromJson(steps.get_pr_data.outputs.result).number }}"
+          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ fromJson(steps.get-pr-data.outputs.result).number }}"
