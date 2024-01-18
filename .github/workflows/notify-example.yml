@@ -19,4 +19,4 @@ jobs:
           SLACK_TITLE: New Release on ${{ github.repository }}
           # リポジトリのurlを取得し、結合してreleaseへのリンクを作成する
           SLACK_MESSAGE: ""
-          SLACK_FOOTER: "Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name}}"
+          SLACK_FOOTER: "Release: ${{ github.event.release.html_url}}"
