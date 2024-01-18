@@ -1,0 +1,24 @@
+name: Notify on new release
+
+on:
+  workflow_dispatch:
+    inputs:
+      VARIABLE:
+        description: "VARIABLE"
+        required: false
+        default: "default value"
+
+jobs:
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: playground
+          SLACK_COLOR: good
+          SLACK_TITLE: Dispatch Test
+          SLACK_MESSAGE: "${{ github.event.inputs.VARIABLE || 'default value in yml'}}"
