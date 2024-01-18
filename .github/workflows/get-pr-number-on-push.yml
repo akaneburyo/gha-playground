@@ -3,7 +3,8 @@ name: Notify on new release
 on:
   push:
     branches:
-      - preview/*
+      - preview/**
+  workflow_dispatch:
 
 jobs:
   get-pr-number:
