@@ -3,6 +3,7 @@ name: Get PR Number
 on:
   push:
     branches:
+      - try/**
       - preview/**
   workflow_dispatch:
 
