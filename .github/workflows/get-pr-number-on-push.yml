@@ -16,17 +16,11 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/github-script@v6
+      - uses: ./.github/actions/get-pr-from-commit
         id: get-pr-data
         with:
-          script: |
-            return (
-              await github.rest.repos.listPullRequestsAssociatedWithCommit({
-                commit_sha: context.sha,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-              })
-            ).data[0];
+          commit: ${{ github.sha }}
+
       - name: Notify
         uses: rtCamp/action-slack-notify@master
         env:
@@ -35,4 +29,4 @@ jobs:
           SLACK_COLOR: good
           SLACK_TITLE: Get PR Number
           # リポジトリのurlを取得し、結合してreleaseへのリンクを作成する
-          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ fromJson(steps.get-pr-data.outputs.result).number }}"
+          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.get-pr-data.outputs.number }}"
