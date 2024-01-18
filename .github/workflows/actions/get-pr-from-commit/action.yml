@@ -1,4 +1,4 @@
-name: "Get PR number from commit hash"
+name: "Get PR data from commit hash"
 
 permissions:
   contents: read
@@ -10,9 +10,11 @@ inputs:
     required: true
 
 outputs:
-  pr-number:
-    description: "PR number"
-    value: ${{ steps.get-pr-number.outputs.pr-number }}
+  number:
+    value: ${{ steps.get-pr-data.outputs.pr-number }}
+- title:
+    value: ${{ steps.get-pr-data.outputs.pr-title }}
+
 
 runs:
   using: "composite"
@@ -24,7 +26,7 @@ runs:
         script: |
           return (
             await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              commit_sha: context.sha,
+              commit_sha: "${{ inputs.commit-hash }}",
               owner: context.repo.owner,
               repo: context.repo.repo,
             })
@@ -33,4 +35,5 @@ runs:
       if: steps.get-pr-data.outputs != null
       id: get-pr-number
       run: |
-        echo "::set-output name=pr-number::${{ steps.get-pr-data.outputs.number }}"
+        echo "number=${{ steps.get-pr-data.outputs.number }}"
+        echo "title=${{ steps.get-pr-data.outputs.title }}"
