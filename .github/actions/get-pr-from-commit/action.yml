@@ -10,10 +10,10 @@ inputs:
 
 outputs:
   number:
-    value: ${{ fromJson(steps.get-pr-data.outputs.result).number }}
+    value: ${{ steps.find-pr.outputs.result && fromJson(steps.find-pr.outputs.result).number || null }}
     description: "PR number"
   title:
-    value: ${{ fromJson(steps.get-pr-data.outputs.result).number }}
+    value: ${{ steps.find-pr.outputs.result && fromJson(steps.find-pr.outputs.result).title || null }}
     description: "PR title"
 
 runs:
@@ -21,7 +21,7 @@ runs:
   steps:
     - name: "Get PR number from commit sha"
       uses: actions/github-script@v6
-      id: get-pr-data
+      id: find-pr
       with:
         script: |
           return (

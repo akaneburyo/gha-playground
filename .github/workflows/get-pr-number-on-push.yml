@@ -25,6 +25,7 @@ jobs:
         run: |
           echo 'contents<<EOF' >> $GITHUB_OUTPUT
           echo "PR: ${{ steps.get-pr-data.outputs.number || 'not found' }}" >> $GITHUB_OUTPUT
+          echo "NextLine..." >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Notify
@@ -39,7 +40,7 @@ jobs:
 
       - name: Find PR
         uses: ./.github/actions/get-pr-from-commit
-        id: get-pr-data
+        id: find-pr
         with:
           commit: ${{ github.sha }}
 
@@ -51,9 +52,9 @@ jobs:
 
       - name: Create or update comment
         uses: ././.github/actions/create-or-update-pr-comment
-        if: steps.get-pr-data.outputs.number != null
+        if: steps.find-pr.outputs.number != null
         with:
-          pr-number: ${{ steps.get-pr-data.outputs.number }}
+          pr-number: ${{ steps.find-pr.outputs.number }}
           target-author: github-actions[bot]
           target-body-includes: "PR"
           body: ${{ steps.message.outputs.contents }}
