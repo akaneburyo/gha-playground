@@ -3,6 +3,7 @@ name: Get PR Number
 on:
   push:
     branches:
+      - main
       - try/**
       - preview/**
   workflow_dispatch:
@@ -16,6 +17,9 @@ jobs:
       contents: read
       pull-requests: read
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - uses: ./.github/actions/get-pr-from-commit
         id: get-pr-data
         with:
@@ -29,4 +33,4 @@ jobs:
           SLACK_COLOR: good
           SLACK_TITLE: Get PR Number
           # リポジトリのurlを取得し、結合してreleaseへのリンクを作成する
-          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.get-pr-data.outputs.number }}"
+          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.get-pr-data.outputs.number || 'not found' }}"

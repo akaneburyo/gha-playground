@@ -1,37 +1,36 @@
 name: "Get PR data from commit hash"
-
-permissions:
-  contents: read
-  pull-requests: read
+description: "Get PR number and title from commit hash"
 
 inputs:
-  commit-hash:
+  commit:
     description: "Target commit hash"
     required: true
 
 outputs:
   number:
     value: ${{ steps.get-pr-data.outputs.pr-number }}
-- title:
+    description: "PR number"
+  title:
     value: ${{ steps.get-pr-data.outputs.pr-title }}
-
+    description: "PR title"
 
 runs:
   using: "composite"
   steps:
-    - name: "Get PR number from commit hash"
-    - uses: actions/github-script@v6
+    - name: "Get PR number from commit sha"
+      uses: actions/github-script@v6
       id: get-pr-data
       with:
         script: |
           return (
             await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              commit_sha: "${{ inputs.commit-hash }}",
+              commit_sha: "${{ inputs.commit }}",
               owner: context.repo.owner,
               repo: context.repo.repo,
             })
           ).data[0];
     - name: "Set PR number"
+      shell: bash
       if: steps.get-pr-data.outputs != null
       id: get-pr-number
       run: |
