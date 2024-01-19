@@ -20,7 +20,6 @@ runs:
     - name: Find PR comment
       uses: peter-evans/find-comment@v1
       id: find-comment
-      if: steps.get-pr-data.outputs.number != null
       with:
         issue-number: ${{ inputs.pr-number }}
         comment-author: ${{ inputs.target-author }}
@@ -32,3 +31,4 @@ runs:
         comment-id: ${{ steps.find-comment.outputs.comment-id }}
         issue-number: ${{ inputs.pr-number }}
         body: ${{ inputs.body }}
+        edit-mode: replace
