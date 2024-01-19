@@ -20,6 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Create message
+        id: message
+        run: |
+          echo 'contents<<EOF' >> $GITHUB_OUTPUT
+          echo "PR: ${{ steps.get-pr-data.outputs.number || 'not found' }}" >> $GITHUB_OUTPUT
+          echo "NextLine..." >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
       - name: Notify
         uses: rtCamp/action-slack-notify@master
         env:
@@ -28,11 +36,11 @@ jobs:
           SLACK_COLOR: good
           SLACK_TITLE: Get PR Number
           # リポジトリのurlを取得し、結合してreleaseへのリンクを作成する
-          SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.get-pr-data.outputs.number || 'not found' }}"
+          SLACK_MESSAGE: ${{ steps.message.outputs.contents}}
 
       - name: Find PR
         uses: ./.github/actions/get-pr-from-commit
-        id: get-pr-data
+        id: find-pr
         with:
           commit: ${{ github.sha }}
 
@@ -44,9 +52,9 @@ jobs:
 
       - name: Create or update comment
         uses: ././.github/actions/create-or-update-pr-comment
-        if: steps.get-pr-data.outputs.number != null
+        if: steps.find-pr.outputs.number != null
         with:
-          pr-number: ${{ steps.get-pr-data.outputs.number }}
+          pr-number: ${{ steps.find-pr.outputs.number }}
           target-author: github-actions[bot]
-          target-body-includes: "Test"
-          body: "Test comment (created at ${{ steps.datetime.outputs.value }})"
+          target-body-includes: "PR"
+          body: ${{ steps.message.outputs.contents }}
