@@ -49,4 +49,4 @@ jobs:
           pr-number: ${{ steps.get-pr-data.outputs.number }}
           target-author: github-actions[bot]
           target-body-includes: "Test"
-          body: "Test comment (created at ${{ steps.datetime.outputs.value }})"
+          body: "**Test** comment (created at ${{ steps.datetime.outputs.value }})"
