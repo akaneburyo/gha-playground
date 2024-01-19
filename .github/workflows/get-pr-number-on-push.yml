@@ -20,11 +20,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - uses: ./.github/actions/get-pr-from-commit
-        id: get-pr-data
-        with:
-          commit: ${{ github.sha }}
-
       - name: Notify
         uses: rtCamp/action-slack-notify@master
         env:
@@ -34,3 +29,24 @@ jobs:
           SLACK_TITLE: Get PR Number
           # リポジトリのurlを取得し、結合してreleaseへのリンクを作成する
           SLACK_MESSAGE: "PR: ${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.get-pr-data.outputs.number || 'not found' }}"
+
+      - name: Find PR
+        uses: ./.github/actions/get-pr-from-commit
+        id: get-pr-data
+        with:
+          commit: ${{ github.sha }}
+
+      - name: Get datetime for now
+        id: datetime
+        run: echo "::set-output name=value::$(date)"
+        env:
+          TZ: Asia/Tokyo
+
+      - name: Create or update comment
+        uses: ././.github/actions/create-or-update-pr-comment
+        if: steps.get-pr-data.outputs.number != null
+        with:
+          pr-number: ${{ steps.get-pr-data.outputs.number }}
+          target-author: github-actions[bot]
+          target-body-includes: "Test"
+          body: "Test comment (created at ${{ steps.datetime.outputs.value }})"

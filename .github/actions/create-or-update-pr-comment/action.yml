@@ -1,0 +1,34 @@
+name: "Create or update PR comment"
+description: "Create or update PR comment"
+inputs:
+  pr-number:
+    description: "Target pr number"
+    required: true
+  target-author:
+    description: "Target author"
+    required: true
+  target-body-includes:
+    description: "Body includes "
+    required: true
+  body:
+    description: "Body"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Find PR comment
+      uses: peter-evans/find-comment@v1
+      id: find-comment
+      if: steps.get-pr-data.outputs.number != null
+      with:
+        issue-number: ${{ inputs.pr-number }}
+        comment-author: ${{ inputs.target-author }}
+        body-includes: ${{ inputs.target-body-includes }}
+
+    - name: Create or update comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        issue-number: ${{ inputs.pr-number }}
+        body: ${{ inputs.body }}
