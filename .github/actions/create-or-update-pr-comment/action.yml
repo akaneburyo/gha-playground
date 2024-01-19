@@ -2,16 +2,16 @@ name: "Create or update PR comment"
 description: "Create or update PR comment"
 inputs:
   pr-number:
-    description: "Target pr number"
+    description: "The number of the pull request in which to search."
     required: true
   target-author:
-    description: "Target author"
+    description: "The GitHub user name of the comment author."
     required: true
   target-body-includes:
-    description: "Body includes "
+    description: "A string to search for in the body of comments."
     required: true
   body:
-    description: "Body"
+    description: "A string of new comment body."
     required: true
 
 runs:
