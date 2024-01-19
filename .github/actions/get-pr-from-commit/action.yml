@@ -8,10 +8,10 @@ inputs:
 
 outputs:
   number:
-    value: ${{ steps.get-pr-data.outputs.number }}
+    value: ${{ fromJson(steps.get-pr-data.outputs.result).number }}
     description: "PR number"
   title:
-    value: ${{ steps.get-pr-data.outputs.title }}
+    value: ${{ fromJson(steps.get-pr-data.outputs.result).number }}
     description: "PR title"
 
 runs:
@@ -29,10 +29,3 @@ runs:
               repo: context.repo.repo,
             })
           ).data[0];
-    - name: "Set PR number"
-      shell: bash
-      if: steps.get-pr-data.outputs != null
-      id: get-pr-number
-      run: |
-        echo "number=${{ steps.get-pr-data.outputs.number }}"
-        echo "title=${{ steps.get-pr-data.outputs.title }}"
