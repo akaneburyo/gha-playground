@@ -8,10 +8,10 @@ inputs:
 
 outputs:
   number:
-    value: ${{ steps.get-pr-data.outputs.pr-number }}
+    value: ${{ steps.get-pr-data.outputs.number }}
     description: "PR number"
   title:
-    value: ${{ steps.get-pr-data.outputs.pr-title }}
+    value: ${{ steps.get-pr-data.outputs.title }}
     description: "PR title"
 
 runs:
