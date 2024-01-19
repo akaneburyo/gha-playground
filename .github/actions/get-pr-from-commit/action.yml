@@ -1,5 +1,7 @@
 name: "Get PR data from commit hash"
-description: "Get PR number and title from commit hash"
+description: |
+  "Get PR number and title from commit hash"
+  "NOTE: required permissions are: contents: read, pull-requests: read"
 
 inputs:
   commit:
