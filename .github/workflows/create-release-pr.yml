@@ -58,6 +58,10 @@ jobs:
           fi
           echo "::set-output name=description::$DESCRIPTION"
 
+      - name: Create release pr
+        run: |
+          gh pr create -B master -t "Release ${{ steps.get_branch_name.outputs.branch_name }}" -b "${{ steps.create_pr_description.outputs.description }}"
+
       # - name: Create Pull Request
       #   uses: peter-evans/create-pull-request@v6
       #   with:
