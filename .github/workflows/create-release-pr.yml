@@ -14,9 +14,15 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   create-release-pr:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -27,17 +33,16 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-      - name: Get short commit hash
-        id: vars
-        run: echo "::set-output name=short_hash::$(git rev-parse --short HEAD)"
+      - name: Get branch name
+        id: get_branch_name
+        run: |
+          BRANCH_NAME=release/$(date +'%Y-%m-%d')-$(git rev-parse --short HEAD)
+          echo "::set-output name=branch_name::$BRANCH_NAME"
 
       - name: Create release branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH_NAME=release/$(date +'%Y-%m-%d')-${{ steps.vars.outputs.short_hash }}
-          git checkout -b $BRANCH_NAME
-          git push origin $BRANCH_NAME
+          git checkout -b ${{ steps.get_branch_name.outputs.branch_name }}
+          git push origin ${{ steps.get_branch_name.outputs.branch_name }}
 
       - name: Create PR description
         id: create_pr_description
@@ -56,7 +61,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Release"
-          branch: release/$(date +'%Y-%m-%d')-${{ steps.vars.outputs.short_hash }}
+          branch: ${{ steps.get_branch_name.outputs.branch_name }}
           base: master
-          title: "Release $(date +'%Y-%m-%d')"
+          title: "Release ${{ steps.get_branch_name.outputs.branch_name }}"
           body: ${{ steps.create_pr_description.outputs.description }}
