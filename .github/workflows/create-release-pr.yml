@@ -1,0 +1,60 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      front:
+        description: "Release front"
+        required: true
+        default: false
+        type: boolean
+      api:
+        description: "Release api"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  create-release-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Get short commit hash
+        id: vars
+        run: echo "::set-output name=short_hash::$(git rev-parse --short HEAD)"
+
+      - name: Create release branch
+        run: |
+          BRANCH_NAME=release/$(date +'%Y-%m-%d')-${{ steps.vars.outputs.short_hash }}
+          git checkout -b $BRANCH_NAME
+          git push origin $BRANCH_NAME
+
+      - name: Create PR description
+        id: create_pr_description
+        run: |
+          DESCRIPTION="## Release Targets\n"
+          if [ "${{ github.event.inputs.front }}" = "true" ]; then
+            DESCRIPTION="${DESCRIPTION}- Front\n"
+          fi
+          if [ "${{ github.event.inputs.api }}" = "true" ]; then
+            DESCRIPTION="${DESCRIPTION}- API\n"
+          fi
+          echo "::set-output name=description::$DESCRIPTION"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Release"
+          branch: release/$(date +'%Y-%m-%d')-${{ steps.vars.outputs.short_hash }}
+          base: master
+          title: "Release $(date +'%Y-%m-%d')"
+          body: ${{ steps.create_pr_description.outputs.description }}
