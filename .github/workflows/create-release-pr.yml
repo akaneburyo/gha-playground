@@ -58,12 +58,12 @@ jobs:
           fi
           echo "::set-output name=description::$DESCRIPTION"
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Release"
-          branch: ${{ steps.get_branch_name.outputs.branch_name }}
-          base: master
-          title: "Release ${{ steps.get_branch_name.outputs.branch_name }}"
-          body: ${{ steps.create_pr_description.outputs.description }}
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v6
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     commit-message: "Release"
+      #     branch: ${{ steps.get_branch_name.outputs.branch_name }}
+      #     base: master
+      #     title: "Release ${{ steps.get_branch_name.outputs.branch_name }}"
+      #     body: ${{ steps.create_pr_description.outputs.description }}
