@@ -32,6 +32,8 @@ jobs:
         run: echo "::set-output name=short_hash::$(git rev-parse --short HEAD)"
 
       - name: Create release branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME=release/$(date +'%Y-%m-%d')-${{ steps.vars.outputs.short_hash }}
           git checkout -b $BRANCH_NAME
