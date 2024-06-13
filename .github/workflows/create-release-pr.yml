@@ -37,37 +37,39 @@ jobs:
 
       - name: Get branch name
         id: get_branch_name
-        run: |
-          BRANCH_NAME=release/$(date +'%Y-%m-%d')-$(git rev-parse --short HEAD)
-          echo "::set-output name=branch_name::$BRANCH_NAME"
+        run: echo "name=release/$(date +'%Y-%m-%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Create release branch
         run: |
-          git switch -c ${{ steps.get_branch_name.outputs.branch_name }}
-          git push origin ${{ steps.get_branch_name.outputs.branch_name }}
+          git switch -c ${{ steps.get_branch_name.outputs.name }}
+          git push origin ${{ steps.get_branch_name.outputs.name }}
 
-      - name: Create PR description
-        id: create_pr_description
+      - name: Create PR Body
+        id: create_pr_body
         run: |
-          DESCRIPTION="## Release Targets\n"
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "## Release Targets" >> $GITHUB_OUTPUT
           if [ "${{ github.event.inputs.front }}" = "true" ]; then
-            DESCRIPTION="${DESCRIPTION}- Front\n"
+            echo "- Front" >> $GITHUB_OUTPUT
           fi
           if [ "${{ github.event.inputs.api }}" = "true" ]; then
-            DESCRIPTION="${DESCRIPTION}- API\n"
+            echo "- API" >> $GITHUB_OUTPUT
           fi
-          echo "::set-output name=description::$DESCRIPTION"
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create release pr
         run: |
-          gh pr create -B master -t "Release ${{ steps.get_branch_name.outputs.branch_name }}" -b "${{ steps.create_pr_description.outputs.description }}"
+          gh pr create \
+          --title "Release ${{ steps.get_branch_name.outputs.name }}" \
+          --body "${{ steps.create_pr_body.outputs.body }}" \
+          --base master
 
       # - name: Create Pull Request
       #   uses: peter-evans/create-pull-request@v6
       #   with:
       #     token: ${{ secrets.GITHUB_TOKEN }}
       #     commit-message: "Release"
-      #     branch: ${{ steps.get_branch_name.outputs.branch_name }}
+      #     branch: ${{ steps.get_branch_name.outputs.name }}
       #     base: master
-      #     title: "Release ${{ steps.get_branch_name.outputs.branch_name }}"
+      #     title: "Release ${{ steps.get_branch_name.outputs.name }}"
       #     body: ${{ steps.create_pr_description.outputs.description }}
