@@ -2,10 +2,9 @@ name: Create Draft Release
 
 on:
   pull_request:
-    types: [opened, labeled, unlabeled]
-    # types: [closed]
-    # branches:
-    #   - "release/**"
+    types: [closed]
+    branches:
+      - "release/**"
 
 permissions:
   contents: write
@@ -25,14 +24,15 @@ jobs:
         id: set-targets
         run: |
           TARGETS=()
-          PR_CONTENT=$(jq -r .pull_request.body < "${{ github.event_path }}")
-          if [[ $PR_CONTENT == *"- front"* ]]; then
+          PR_CONTENT="${{ github.event.pull_request.body }}"
+          if [[ $PR_CONTENT == *"- Front"* ]]; then
             TARGETS+=("front-app")
           fi
-          if [[ $PR_CONTENT == *"- api"* ]]; then
+          if [[ $PR_CONTENT == *"- API"* ]]; then
             TARGETS+=("web-api")
           fi
-          echo "targets=${TARGETS[@]}" >> $GITHUB_OUTPUT
+          echo targets=$(printf '%s\n' "${TARGETS[@]}" | jq -R . | jq -s .) >> $GITHUB_OUTPUT
+          echo "Targets: ${{ steps.set-targets.outputs.targets }}"
 
   create-draft-release:
     runs-on: ubuntu-latest
@@ -58,6 +58,7 @@ jobs:
           prefix: ${{ matrix.target }}
 
       - name: Get Release Tag
+        if: steps.previous_tag.outputs.tag != ''
         id: release_tag
         run: |
           echo tag=$(echo ${{ steps.previous_tag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}') >> $GITHUB_OUTPUT
