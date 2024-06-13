@@ -1,0 +1,24 @@
+name: "Get Latest Tag"
+description: "Get the latest tag based on a given prefix"
+inputs:
+  prefix:
+    description: "Prefix for the tag"
+    required: true
+    default: ""
+outputs:
+  tag:
+    description: "The latest tag based on the given prefix"
+    value: ${{ steps.get_latest_tag.outputs.tag }}
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Get Latest Tag
+      shell: bash
+      id: get_latest_tag
+      run: |
+        echo "tag=$(git tag -l "${{ inputs.prefix }}*" --sort=-v:refname | head -n 1)" >> $GITHUB_OUTPUT

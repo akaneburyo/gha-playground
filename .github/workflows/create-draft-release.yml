@@ -1,0 +1,60 @@
+name: Create Draft Release
+
+on:
+  # pull_request:
+  #   types: [closed]
+  #   branches:
+  #     - 'release/*'
+  workflow_dispatch:
+
+jobs:
+  # set-matrix:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     targets: ${{ steps.set-matrix.outputs.targets }}
+  #   steps:
+  #     - name: Set matrix
+  #       id: set-matrix
+  #       run: |
+  #         echo "matrix=1.0.0" >> $GITHUB_ENV
+
+  create-draft-release:
+    # if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    # strategy:
+    #   matrix:
+    #     target: ${{ needs.set-matrix.outputs.targets }}
+
+    env:
+      target: "hoge-fuga-app" # ${{ matrix.target }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: previous_tag
+        uses: ./.github/actions/get-latest-tag
+        with:
+          prefix: ${{ env.target }}
+
+      - name: Get Release Tag
+        id: release_tag
+        run: |
+          echo tag=$(echo ${{ steps.previous_tag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}') >> $GITHUB_OUTPUT
+
+      - name: Dev Print
+        run: |
+          echo "Latest: ${{ steps.previous_tag.outputs.tag }}"
+          echo "Release: ${{ steps.release_tag.outputs.tag }}"
+
+      - name: Create Draft Release
+        run: |
+          gh release create ${{ steps.release_tag.outputs.tag }} \
+            --target master \
+            --generate-notes \
+            --notes-start-tag "${{steps.previous_tag.outputs.tag}}" \
+            --draft
