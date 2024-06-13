@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - "release/**"
+      - "master"
 
 permissions:
   contents: write
@@ -13,7 +13,7 @@ permissions:
 jobs:
   set-targets:
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     outputs:
       targets: ${{ steps.set-targets.outputs.targets }}
     steps:
