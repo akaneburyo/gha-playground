@@ -7,6 +7,10 @@ on:
   #     - 'release/*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   # set-matrix:
   #   runs-on: ubuntu-latest
