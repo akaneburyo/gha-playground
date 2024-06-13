@@ -1,0 +1,77 @@
+name: Create Draft Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - "master"
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  set-targets:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      targets: ${{ steps.set-targets.outputs.targets }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set targets based on PR content
+        id: set-targets
+        run: |
+          TARGETS=()
+          PR_CONTENT="${{ github.event.pull_request.body }}"
+          if [[ $PR_CONTENT == *"- Front"* ]]; then
+            TARGETS+=("front-app")
+          fi
+          if [[ $PR_CONTENT == *"- API"* ]]; then
+            TARGETS+=("web-api")
+          fi
+          echo targets=$(printf '%s\n' "${TARGETS[@]}" | jq -R . | jq -s .) >> $GITHUB_OUTPUT
+          echo "Targets: ${{ steps.set-targets.outputs.targets }}"
+
+  create-draft-release:
+    runs-on: ubuntu-latest
+    needs: [set-targets]
+    if: ${{ needs.set-targets.outputs.targets != '[]' && needs.set-targets.outputs.targets != '' }}
+    strategy:
+      matrix:
+        target: ${{fromJson(needs.set-targets.outputs.targets)}}
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: previous_tag
+        uses: ./.github/actions/get-latest-tag
+        with:
+          prefix: ${{ matrix.target }}
+
+      - name: Get Release Tag
+        if: steps.previous_tag.outputs.tag != ''
+        id: release_tag
+        run: |
+          echo tag=$(echo ${{ steps.previous_tag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}') >> $GITHUB_OUTPUT
+
+      - name: Dev Print
+        run: |
+          echo "Latest: ${{ steps.previous_tag.outputs.tag }}"
+          echo "Release: ${{ steps.release_tag.outputs.tag }}"
+
+      - name: Create Draft Release
+        run: |
+          gh release create ${{ steps.release_tag.outputs.tag }} \
+            --target master \
+            --generate-notes \
+            --notes-start-tag "${{steps.previous_tag.outputs.tag}}" \
+            --draft
