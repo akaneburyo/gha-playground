@@ -2,9 +2,10 @@ name: Create Draft Release
 
 on:
   pull_request:
-    types: [closed]
-    branches:
-      - "master"
+    types: [labeled, unlabeled, synchronize]
+    # types: [closed]
+    # branches:
+    #   - "master"
 
 permissions:
   contents: write
@@ -13,7 +14,7 @@ permissions:
 jobs:
   set-targets:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     outputs:
       targets: ${{ steps.set-targets.outputs.targets }}
     steps:
@@ -74,4 +75,4 @@ jobs:
             --target master \
             --generate-notes \
             --notes-start-tag "${{steps.previous_tag.outputs.tag}}" \
-            --draft
+            --draft | cat
