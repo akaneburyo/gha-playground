@@ -26,12 +26,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          depth: 0
 
-      - name: Set up Git
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      # - name: Set up Git
+      #   run: |
+      #     git config --global user.name 'github-actions[bot]'
+      #     git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Get branch name
         id: get_branch_name
@@ -41,7 +43,7 @@ jobs:
 
       - name: Create release branch
         run: |
-          git checkout -b ${{ steps.get_branch_name.outputs.branch_name }}
+          git switch -c ${{ steps.get_branch_name.outputs.branch_name }}
           git push origin ${{ steps.get_branch_name.outputs.branch_name }}
 
       - name: Create PR description
