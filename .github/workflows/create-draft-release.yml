@@ -25,14 +25,21 @@ jobs:
         id: set-targets
         run: |
           TARGETS=()
-          PR_CONTENT=$(jq -r .pull_request.body < "${{ github.event_path }}")
-          if [[ $PR_CONTENT == *"- front"* ]]; then
+
+          PR_CONTENT="${{ github.event.pull_request.body }}"
+          echo $PR_CONTENT
+
+          if [[ $PR_CONTENT == *"- Front"* ]]; then
             TARGETS+=("front-app")
           fi
-          if [[ $PR_CONTENT == *"- api"* ]]; then
+          if [[ $PR_CONTENT == *"- API"* ]]; then
             TARGETS+=("web-api")
           fi
-          echo "targets=${TARGETS[@]}" >> $GITHUB_OUTPUT
+          echo targets=$(printf '%s\n' "${TARGETS[@]}" | jq -R . | jq -s .) >> $GITHUB_OUTPUT
+      - name: Dev
+        run: |
+          echo "${{ steps.set-targets.outputs.targets }}"
+          echo "${{fromJson(steps.set-targets.outputs.targets)}}"
 
   create-draft-release:
     runs-on: ubuntu-latest
