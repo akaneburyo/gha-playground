@@ -2,10 +2,9 @@ name: Create Draft Release
 
 on:
   pull_request:
-    types: [opened, labeled, unlabeled]
-    # types: [closed]
-    # branches:
-    #   - "release/**"
+    types: [closed]
+    branches:
+      - "release/**"
 
 permissions:
   contents: write
