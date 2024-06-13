@@ -1,36 +1,48 @@
 name: Create Draft Release
 
 on:
-  # pull_request:
-  #   types: [closed]
-  #   branches:
-  #     - 'release/*'
-  workflow_dispatch:
+  pull_request:
+    types: [opened, labeled, unlabeled]
+    # types: [closed]
+    # branches:
+    #   - "release/**"
 
 permissions:
   contents: write
   pull-requests: read
 
 jobs:
-  # set-matrix:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     targets: ${{ steps.set-matrix.outputs.targets }}
-  #   steps:
-  #     - name: Set matrix
-  #       id: set-matrix
-  #       run: |
-  #         echo "matrix=1.0.0" >> $GITHUB_ENV
+  set-targets:
+    runs-on: ubuntu-latest
+    # if: github.event.pull_request.merged == true
+    outputs:
+      targets: ${{ steps.set-targets.outputs.targets }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set targets based on PR content
+        id: set-targets
+        run: |
+          TARGETS=()
+          PR_CONTENT=$(jq -r .pull_request.body < "${{ github.event_path }}")
+          if [[ $PR_CONTENT == *"- front"* ]]; then
+            TARGETS+=("front-app")
+          fi
+          if [[ $PR_CONTENT == *"- api"* ]]; then
+            TARGETS+=("web-api")
+          fi
+          echo "targets=${TARGETS[@]}" >> $GITHUB_OUTPUT
 
   create-draft-release:
-    # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    # strategy:
-    #   matrix:
-    #     target: ${{ needs.set-matrix.outputs.targets }}
+    needs: [set-targets]
+    if: ${{ needs.set-targets.outputs.targets != '[]' && needs.set-targets.outputs.targets != '' }}
+    strategy:
+      matrix:
+        target: ${{fromJson(needs.set-targets.outputs.targets)}}
 
     env:
-      target: "hoge-fuga-app" # ${{ matrix.target }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -43,7 +55,7 @@ jobs:
         id: previous_tag
         uses: ./.github/actions/get-latest-tag
         with:
-          prefix: ${{ env.target }}
+          prefix: ${{ matrix.target }}
 
       - name: Get Release Tag
         id: release_tag
