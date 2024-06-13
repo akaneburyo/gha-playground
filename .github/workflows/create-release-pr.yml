@@ -27,13 +27,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          depth: 0
-
-      # - name: Set up Git
-      #   run: |
-      #     git config --global user.name 'github-actions[bot]'
-      #     git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Get branch name
         id: get_branch_name
@@ -66,13 +59,3 @@ jobs:
           --title "${{ steps.create_pr_content.outputs.title}}" \
           --body "${{ steps.create_pr_content.outputs.body }}" \
           --base master
-
-      # - name: Create Pull Request
-      #   uses: peter-evans/create-pull-request@v6
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     commit-message: "Release"
-      #     branch: ${{ steps.get_branch_name.outputs.name }}
-      #     base: master
-      #     title: "Release ${{ steps.get_branch_name.outputs.name }}"
-      #     body: ${{ steps.create_pr_description.outputs.description }}
