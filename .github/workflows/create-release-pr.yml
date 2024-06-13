@@ -30,10 +30,10 @@ jobs:
         with:
           depth: 0
 
-      # - name: Set up Git
-      #   run: |
-      #     git config --global user.name 'github-actions[bot]'
-      #     git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Get branch name
         id: get_branch_name
@@ -59,7 +59,7 @@ jobs:
           echo "::set-output name=description::$DESCRIPTION"
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Release"
