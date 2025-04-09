@@ -1,10 +1,13 @@
-name: Create Draft Release
+name: Create Release Draft
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - "master"
+  workflow_dispatch:
+    inputs:
+      frontend:
+        description: "Release frontend"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -13,26 +16,20 @@ permissions:
 jobs:
   set-targets:
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged == true
     outputs:
       targets: ${{ steps.set-targets.outputs.targets }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set targets based on PR content
         id: set-targets
         run: |
           TARGETS=()
-          PR_CONTENT="${{ github.event.pull_request.body }}"
-          if [[ $PR_CONTENT == *"- Front"* ]]; then
-            TARGETS+=("front-app")
+          if [ "${{ github.event.inputs.frontend }}" = "true" ]; then
+            TARGETS+=("web-frontend")
           fi
-          if [[ $PR_CONTENT == *"- API"* ]]; then
-            TARGETS+=("web-api")
-          fi
+          echo "Release Targets: ${{ steps.set-targets.outputs.targets }}"
           echo targets=$(printf '%s\n' "${TARGETS[@]}" | jq -R . | jq -s .) >> $GITHUB_OUTPUT
-          echo "Targets: ${{ steps.set-targets.outputs.targets }}"
 
   create-draft-release:
     runs-on: ubuntu-latest
@@ -40,49 +37,70 @@ jobs:
     if: ${{ needs.set-targets.outputs.targets != '[]' && needs.set-targets.outputs.targets != '' }}
     strategy:
       matrix:
+        # リリース対象別に並列実行
         target: ${{fromJson(needs.set-targets.outputs.targets)}}
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
 
+      # 関連する直近のタグを取得
       - name: Get latest tag
         id: previous_tag
         uses: ./.github/actions/get-latest-tag
         with:
           prefix: ${{ matrix.target }}
 
+      # パッチバージョンを+1したタグを生成
       - name: Get Release Tag
         if: steps.previous_tag.outputs.tag != ''
         id: release_tag
         run: |
           echo tag=$(echo ${{ steps.previous_tag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}') >> $GITHUB_OUTPUT
 
-      - name: Dev Print
+      - name: Generate CHANGELOG file
+        id: generate_changelog_file
         run: |
-          echo "Latest: ${{ steps.previous_tag.outputs.tag }}"
-          echo "Release: ${{ steps.release_tag.outputs.tag }}"
+          config_file_path=".github/release.yml"
+          if [ "${{ matrix.target }}" = "web-frontend" ]; then
+            config_file_path=".github/RELEASE_NOTE_TEMPLATE/web-front.yml"
+          fi
+
+          body_path="changelogs/${{ matrix.target }}/CHANGELOG.txt"
+          body=$(gh api --method POST repos/akaneburyo/gha-playground/releases/generate-notes \
+            -f "target_commitish=main" \
+            -f "tag_name=${{ steps.release_tag.outputs.tag }}" \
+            -f "previous_tag_name=${{ steps.previous_tag.outputs.tag }}" \
+            -f "configuration_file_path=${config_file_path}" \
+            | jq .body | sed 's/"//g')
+          mkdir -p changelogs/${{ matrix.target }}
+          echo -e "${body}" >> ${body_path}
+          sed 's/\n//g' ${body_path}
+          echo "body_path=${body_path}" >> $GITHUB_OUTPUT
 
       - name: Create Draft Release
         id: create-draft-release
-        run: |
-          echo "draft_url<<EOF" >> $GITHUB_OUTPUT
-          gh release create ${{ steps.release_tag.outputs.tag }} \
-            --target master \
-            --generate-notes \
-            --notes-start-tag "${{steps.previous_tag.outputs.tag}}" \
-            --draft | grep "https://github.com" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          target_commitish: main
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          body_path: ${{ steps.generate_changelog_file.outputs.body_path }}
 
-      - name: Notify to Slack
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_COLOR: good
-          SLACK_TITLE: "Draft Release Created for ${{ matrix.target }}"
-          SLACK_MESSAGE: "${{ steps.create-draft-release.outputs.draft_url }}"
+      - name: Remove CHANGELOG file
+        id: remove_changelog_file
+        run: |
+          rm ${{ steps.generate_changelog_file.outputs.body_path }}
+
+      # - name: Notify to Slack
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_PRIORITY_LOW_URL }}
+      #     SLACK_CHANNEL: proj_shiharai_notification_github
+      #     SLACK_TITLE: "Draft Release Created for ${{ matrix.target }}"
+      #     SLACK_MESSAGE: "${{ steps.create-draft-release.outputs.url }}"
+      #     SLACK_COLOR: good
