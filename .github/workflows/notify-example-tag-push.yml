@@ -1,0 +1,23 @@
+name: Notify on push new tag
+
+on:
+  push:
+    tags:
+      - "**"
+      - "*"
+
+jobs:
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: notify
+          SLACK_COLOR: good
+          SLACK_TITLE: New tag pushed on ${{ github.repository }}
+          SLACK_MESSAGE: "Tag Pushed"
+          SLACK_FOOTER: "Tag: ${{ github.ref }}"

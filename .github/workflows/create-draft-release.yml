@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
   pull-requests: read
 
 jobs:
@@ -20,6 +21,8 @@ jobs:
       targets: ${{ steps.set-targets.outputs.targets }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set targets based on PR content
         id: set-targets
@@ -62,6 +65,13 @@ jobs:
         run: |
           echo tag=$(echo ${{ steps.previous_tag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}') >> $GITHUB_OUTPUT
 
+      - name: Push tag
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions"
+          git tag ${{ steps.release_tag.outputs.tag }}
+          git push origin ${{ steps.release_tag.outputs.tag }}
+
       - name: Generate CHANGELOG file
         id: generate_changelog_file
         run: |
@@ -87,7 +97,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          target_commitish: main
+          target_commitish: ${{ github.ref }}
           tag_name: ${{ steps.release_tag.outputs.tag }}
           body_path: ${{ steps.generate_changelog_file.outputs.body_path }}
 
