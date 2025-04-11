@@ -1,0 +1,6 @@
+changelog:
+  categories:
+    # Others
+    - title: ❓ Others
+      labels:
+        - "*"
