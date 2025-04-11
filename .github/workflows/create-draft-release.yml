@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
   pull-requests: read
 
 jobs:
@@ -61,6 +62,13 @@ jobs:
         id: release_tag
         run: |
           echo tag=$(echo ${{ steps.previous_tag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}') >> $GITHUB_OUTPUT
+
+      - name: Push tag
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.release_tag.outputs.tag }}
+          git push origin ${{ steps.release_tag.outputs.tag }}
 
       - name: Generate CHANGELOG file
         id: generate_changelog_file
