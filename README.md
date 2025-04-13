@@ -1,3 +1,3 @@
 # gha-playground
 
-difffff
+diff
